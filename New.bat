@@ -17,7 +17,7 @@ if not exist "%folderPath%" (
 )
 
 :: Loop to capture screenshots from ports 5501 - 5505
-for /l %%p in (5501,1,5560) do (
+for /l %%p in (5501,1,5530) do (
     echo Capturing screenshot from BlueStacks port %%p ...
 
     :: Connect to ADB
