@@ -32,7 +32,7 @@ if not exist "%folderPath%" (
     echo [INFO] Created new folder: %folderPath%
 )
 
-:: Loop to capture screenshots from ports 5523 - 5544
+:: Loop to capture screenshots from ports 5531 - 5560
 for /l %%p in (5523,1,5544) do (
     echo [INFO] Capturing screenshot from BlueStacks port %%p ...
 
@@ -45,11 +45,20 @@ for /l %%p in (5523,1,5544) do (
     ) else (
         echo [INFO] Connected to ADB on port %%p.
 
+        :: ตรวจสอบว่า ADB มองเห็นอุปกรณ์นี้หรือไม่
+        adb -s 127.0.0.1:%%p shell echo "device found" >nul 2>&1
+        if %errorlevel% neq 0 (
+            echo [WARNING] Device not found on port %%p! Skipping to next port.
+            adb disconnect 127.0.0.1:%%p >nul 2>&1
+            timeout /t 1 /nobreak >nul
+            goto NEXT_PORT
+        )
+
         :: Capture screenshot and save to BlueStacks SD Card
-        adb shell screencap -p /sdcard/screenshot_%%p.png
+        adb -s 127.0.0.1:%%p shell screencap -p /sdcard/screenshot_%%p.png
 
         :: Pull the file to Check_Code folder
-        adb pull /sdcard/screenshot_%%p.png "%folderPath%\screenshot_%%p.png" >nul 2>&1
+        adb -s 127.0.0.1:%%p pull /sdcard/screenshot_%%p.png "%folderPath%\screenshot_%%p.png" >nul 2>&1
 
         :: Verify file existence
         if not exist "%folderPath%\screenshot_%%p.png" (
@@ -62,6 +71,7 @@ for /l %%p in (5523,1,5544) do (
         adb disconnect 127.0.0.1:%%p >nul 2>&1
         timeout /t 1 /nobreak >nul
     )
+    :NEXT_PORT
 )
 
 echo [INFO] Screenshot capturing completed! All files are in: %folderPath%
@@ -69,7 +79,7 @@ echo [INFO] Screenshot capturing completed! All files are in: %folderPath%
 :: Open the Check_Code folder
 explorer "%folderPath%"
 
-:: Open the screenshot_5523.png file if it exists
+:: Open the screenshot_5531.png file if it exists
 if exist "%folderPath%\screenshot_5523.png" start "" "%folderPath%\screenshot_5523.png"
 
 :: Schedule deletion of screenshots after CMD closes
