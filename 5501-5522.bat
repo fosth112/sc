@@ -15,8 +15,9 @@ for /f "delims=" %%a in ('where adb') do set adbPath=%%a
 echo [INFO] ADB Path: %adbPath%
 
 :: Restart ADB to ensure fresh connection
+adb kill-server
 adb start-server
-timeout /t 2 /nobreak >nul
+timeout /t 5 /nobreak >nul
 
 :: ตรวจสอบ ADB version อีกครั้ง
 adb version >nul 2>&1
