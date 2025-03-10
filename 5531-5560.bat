@@ -45,11 +45,20 @@ for /l %%p in (5531,1,5560) do (
     ) else (
         echo [INFO] Connected to ADB on port %%p.
 
+        :: ตรวจสอบว่า ADB มองเห็นอุปกรณ์นี้หรือไม่
+        adb -s 127.0.0.1:%%p shell echo "device found" >nul 2>&1
+        if %errorlevel% neq 0 (
+            echo [WARNING] Device not found on port %%p! Skipping to next port.
+            adb disconnect 127.0.0.1:%%p >nul 2>&1
+            timeout /t 1 /nobreak >nul
+            goto NEXT_PORT
+        )
+
         :: Capture screenshot and save to BlueStacks SD Card
-        adb shell screencap -p /sdcard/screenshot_%%p.png
+        adb -s 127.0.0.1:%%p shell screencap -p /sdcard/screenshot_%%p.png
 
         :: Pull the file to Check_Code folder
-        adb pull /sdcard/screenshot_%%p.png "%folderPath%\screenshot_%%p.png" >nul 2>&1
+        adb -s 127.0.0.1:%%p pull /sdcard/screenshot_%%p.png "%folderPath%\screenshot_%%p.png" >nul 2>&1
 
         :: Verify file existence
         if not exist "%folderPath%\screenshot_%%p.png" (
@@ -62,6 +71,7 @@ for /l %%p in (5531,1,5560) do (
         adb disconnect 127.0.0.1:%%p >nul 2>&1
         timeout /t 1 /nobreak >nul
     )
+    :NEXT_PORT
 )
 
 echo [INFO] Screenshot capturing completed! All files are in: %folderPath%
